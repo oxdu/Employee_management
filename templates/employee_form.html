@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Create Employee</h2>
+
+<select id="form-select" onchange="loadForm()">
+    <option value="">Select a form</option>
+    {% for form in forms %}
+        <option value="{{ form.id }}" {% if selected_form and selected_form.id == form.id %}selected{% endif %}>
+            {{ form.name }}
+        </option>
+    {% endfor %}
+</select>
+
+{% if selected_form %}
+<form id="employee-form">
+    <input type="hidden" id="form-id" value="{{ selected_form.id }}">
+    {% for field in selected_form.fields.all %}
+        <div class="form-group">
+            <label>{{ field.label }} {% if field.required %}*{% endif %}</label>
+            {% if field.field_type == 'textarea' %}
+                <textarea name="field_{{ field.id }}" {% if field.required %}required{% endif %}></textarea>
+            {% else %}
+                <input type="{{ field.field_type }}" name="field_{{ field.id }}" {% if field.required %}required{% endif %}>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit">Create Employee</button>
+</form>
+{% endif %}
+
+<script>
+function loadForm() {
+    const formId = $('#form-select').val();
+    if (formId) {
+        window.location.href = '/employee-form/' + formId + '/';
+    }
+}
+
+$('#employee-form').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = $(this).serialize() + '&form_id=' + $('#form-id').val() + '&csrfmiddlewaretoken={{ csrf_token }}';
+    
+    $.ajax({
+        url: '{% url "employee_form" %}',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                alert('Employee created successfully!');
+                window.location.href = '{% url "employee_list" %}';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

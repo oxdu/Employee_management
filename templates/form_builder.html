@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Form Builder</h2>
+<div class="form-builder">
+    <input type="text" id="form-name" placeholder="Form Name">
+    <div id="fields-container"></div>
+    <button onclick="addField()">Add Field</button>
+    <button onclick="saveForm()">Save Form</button>
+</div>
+
+<h3>Existing Forms</h3>
+<ul>
+    {% for form in forms %}
+        <li>{{ form.name }} - {{ form.created_at }}</li>
+    {% endfor %}
+</ul>
+
+<script>
+let fields = [];
+
+function addField() {
+    const fieldId = Date.now();
+    const fieldHtml = `
+        <div class="field-item" data-id="${fieldId}">
+            <input type="text" placeholder="Label" class="field-label">
+            <select class="field-type">
+                <option value="text">Text</option>
+                <option value="number">Number</option>
+                <option value="date">Date</option>
+                <option value="email">Email</option>
+                <option value="password">Password</option>
+                <option value="textarea">Textarea</option>
+            </select>
+            <label>
+                <input type="checkbox" class="field-required" checked> Required
+            </label>
+            <button onclick="removeField(${fieldId})">Remove</button>
+        </div>
+    `;
+    $('#fields-container').append(fieldHtml);
+}
+
+function removeField(fieldId) {
+    $(`.field-item[data-id="${fieldId}"]`).remove();
+}
+
+function saveForm() {
+    const formName = $('#form-name').val();
+    const fields = [];
+    
+    $('.field-item').each(function() {
+        fields.push({
+            label: $(this).find('.field-label').val(),
+            type: $(this).find('.field-type').val(),
+            required: $(this).find('.field-required').is(':checked')
+        });
+    });
+    
+    $.ajax({
+        url: '{% url "form_builder" %}',
+        method: 'POST',
+        data: {
+            form_name: formName,
+            fields: JSON.stringify(fields),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                alert('Form saved successfully!');
+                location.reload();
+            }
+        }
+    });
+}
+
+// Enable drag and drop
+$(function() {
+    $('#fields-container').sortable();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Employee List</h2>
+
+<div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search employees...">
+    <button onclick="searchEmployees()">Search</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Form</th>
+            <th>Data</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for employee in employees %}
+        <tr>
+            <td>{{ employee.id }}</td>
+            <td>{{ employee.form.name }}</td>
+            <td>
+                {% for data in employee.data.all %}
+                    <strong>{{ data.field.label }}:</strong> {{ data.value }}<br>
+                {% endfor %}
+            </td>
+            <td>{{ employee.created_at|date:"Y-m-d H:i" }}</td>
+            <td>
+                <button onclick="deleteEmployee({{ employee.id }})">Delete</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+function searchEmployees() {
+    const query = $('#search-input').val();
+    window.location.href = '?search=' + encodeURIComponent(query);
+}
+
+function deleteEmployee(employeeId) {
+    if (confirm('Are you sure you want to delete this employee?')) {
+        $.ajax({
+            url: '{% url "employee_list" %}',
+            method: 'POST',
+            data: {
+                action: 'delete',
+                employee_id: employeeId,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                }
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
