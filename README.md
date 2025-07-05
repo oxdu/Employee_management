@@ -56,3 +56,5 @@ Copy the access token from the login response
 In Postman, go to the "Authorization" tab
 Select Type: "Bearer Token"
 Paste your access token in the Token field
+
+D Try other endpoints
